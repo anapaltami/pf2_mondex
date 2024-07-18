@@ -1,14 +1,17 @@
 """
-Assignment 2
+Iteration 2
 
 Author: Anastasia Altamirano
-Date: 2024-07-10
+Date: 2024-07-17
 Class: COS349-O
 Instructor: Robert Martinez
 
 Dependencies:
-    - sqlite3
     - pandas
+    - scikit-learn
+    - joblib
+    - PyQt5
+    - logging
 """
 import subprocess
 import sys
