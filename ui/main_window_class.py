@@ -1,12 +1,15 @@
 import sqlite3
 import pandas as pd
-from PyQt5.QtWidgets import QVBoxLayout, QLineEdit, QWidget, QPushButton, QTableWidgetItem, QTableWidget, QFormLayout, \
-    QSpinBox, QComboBox, QLabel
+from PyQt5.QtWidgets import (
+    QVBoxLayout, QLineEdit, QWidget, QPushButton, QTableWidgetItem, QTableWidget, QFormLayout, QSpinBox, QComboBox,
+    QLabel, QTabWidget, QTextEdit
+)
 from src.config import DB_FILE
 from models.pf2_newmon_model import NewMonsterModel
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -18,19 +21,44 @@ class MainWindow(QWidget):
     def initUI(self):
         self.layout = QVBoxLayout()
 
+        # init tab widget
+        self.tabs = QTabWidget()
+        self.layout.addWidget(self.tabs)
+
+        # add tabs
+        self.tabs.addTab(self.search_tab(), "Search Monsters")
+        self.tabs.addTab(self.generation_tab(), "Generate Monsters")
+        self.tabs.addTab(self.legality_tab(), "Legal License Notes")
+
+        # set layout
+        self.setLayout(self.layout)
+        self.setWindowTitle('PF2 Monster Dex')
+        self.setGeometry(100, 100, 800, 600)
+
+    def search_tab(self):
+        search_tab = QWidget()
+        layout = QVBoxLayout()
+
         # search bar
         self.search_bar = QLineEdit(self)
         self.search_bar.setPlaceholderText('Search')
-        self.layout.addWidget(self.search_bar)
+        layout.addWidget(self.search_bar)
 
         # search button
         self.search_button = QPushButton('Search', self)
         self.search_button.clicked.connect(self.search)
-        self.layout.addWidget(self.search_button)
+        layout.addWidget(self.search_button)
 
         # data display table
         self.table = QTableWidget(self)
-        self.layout.addWidget(self.table)
+        layout.addWidget(self.table)
+
+        search_tab.setLayout(layout)
+        return search_tab
+
+    def generation_tab(self):
+        generate_tab = QWidget()
+        layout = QVBoxLayout()
 
         # PF2 monster generation elements
         self.form_layout = QFormLayout()
@@ -43,13 +71,27 @@ class MainWindow(QWidget):
         self.form_layout.addRow(QLabel('Level'), self.level_input)
         self.form_layout.addRow(QLabel('Trait'), self.trait_input)
         self.form_layout.addWidget(self.generate_button)
-        self.layout.addLayout(self.form_layout)
+        layout.addLayout(self.form_layout)
 
-        # set layout
-        self.setLayout(self.layout)
-        self.setWindowTitle('PF2 Monster Dex')
-        self.table.setSortingEnabled(True)
-        self.load_data()
+        generate_tab.setLayout(layout)
+        return generate_tab
+
+    def legality_tab(self):
+        legal_tab = QWidget()
+        layout = QVBoxLayout()
+
+        # legal license notes
+        self.license_text = QTextEdit(self)
+        self.license_text.setReadOnly(True)
+        self.license_text.setText(
+            "Legal License Notes:\n\n"  # TODO Replace this with actual license text
+            "This work includes material taken from the System Reference Document 5.1 (SRD 5.1) by Wizards of the "
+            "Coast and licensed under the Open Game License (OGL).\n\n"
+            "For further details, please refer to the OGL available at www.wizards.com/d20.")
+
+        layout.addWidget(self.license_text)
+        legal_tab.setLayout(layout)
+        return legal_tab
 
     def load_data(self, query=""):
         conn = sqlite3.connect(DB_FILE)
