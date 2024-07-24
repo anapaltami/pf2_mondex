@@ -108,10 +108,10 @@ class MainWindow(QWidget):
     def load_data(self, query=""):
         conn = sqlite3.connect(DB_FILE)
         if query:
-            sql_query = (f"SELECT * FROM pf2_monsters "
+            sql_query = (f"SELECT Name, Traits FROM pf2_monsters "
                          f"WHERE Name LIKE '%{query}%' OR Traits LIKE '%{query}%'")
         else:
-            sql_query = f"SELECT * FROM pf2_monsters"
+            sql_query = f"SELECT Name, Level, Traits FROM pf2_monsters"
         df = pd.read_sql_query(sql_query, conn)
         conn.close()
 
