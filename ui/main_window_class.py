@@ -77,7 +77,10 @@ class MainWindow(QWidget):
 
     def generation_tab(self):
         generate_tab = QWidget()
-        layout = QVBoxLayout()
+        layout = QHBoxLayout()
+
+        # left panel for generation elements
+        left_panel = QVBoxLayout()
 
         # PF2 monster generation elements
         self.form_layout = QFormLayout()
@@ -85,13 +88,21 @@ class MainWindow(QWidget):
         self.level_input.setRange(-1, 25)
         self.trait_input = QComboBox()
         self.trait_input.addItems(self.get_monster_traits())
-        self.generate_button = QPushButton('Generate')
+        self.generate_button = QPushButton('Generate Monster')
         self.generate_button.clicked.connect(self.generate_monster)
         self.form_layout.addRow(QLabel('Level'), self.level_input)
         self.form_layout.addRow(QLabel('Trait'), self.trait_input)
         self.form_layout.addWidget(self.generate_button)
-        layout.addLayout(self.form_layout)
+        left_panel.addLayout(self.form_layout)
 
+        layout.addLayout(left_panel)
+
+        # right panel for generated monster details
+        self.generated_details_panel = QVBoxLayout()
+        self.generated_details_label = QLabel("Generate a monster to see its details.")
+        self.generated_details_panel.addWidget(self.generated_details_label)
+
+        layout.addLayout(self.generated_details_panel)
         generate_tab.setLayout(layout)
         return generate_tab
 
@@ -185,10 +196,10 @@ class MainWindow(QWidget):
     def display_generated_monster(self, new_monster_block):
         level = self.level_input.value()
         monster_trait = self.trait_input.currentText()
-        message = f'Level {level} {monster_trait} Monster:\n'
+        details = f'Level {level} {monster_trait} Monster:\n'
         for stat, value in new_monster_block.items():
-            message += f'{stat}: {value}\n'
-        self.show_message(message)
+            details += f'{stat}: {value}\n'
+        self.generated_details_label.setText(details)
 
     def show_message(self, message):
         msg = QLabel(message)
