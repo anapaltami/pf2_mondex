@@ -35,6 +35,9 @@ class MainWindow(QWidget):
         self.setWindowTitle('PF2 Monster Dex')
         self.setGeometry(100, 100, 800, 600)
 
+        # load data table on startup
+        self.load_data()
+
     def search_tab(self):
         search_tab = QWidget()
         layout = QVBoxLayout()
@@ -42,6 +45,7 @@ class MainWindow(QWidget):
         # search bar
         self.search_bar = QLineEdit(self)
         self.search_bar.setPlaceholderText('Search')
+        self.search_bar.textChanged.connect(self.search) # dynamic searching
         layout.addWidget(self.search_bar)
 
         # search button
