@@ -88,10 +88,18 @@ class MainWindow(QWidget):
         self.license_text = QTextEdit(self)
         self.license_text.setReadOnly(True)
         self.license_text.setText(
-            "Legal License Notes:\n\n"  # TODO Replace this with actual license text
-            "This work includes material taken from the System Reference Document 5.1 (SRD 5.1) by Wizards of the "
-            "Coast and licensed under the Open Game License (OGL).\n\n"
-            "For further details, please refer to the OGL available at www.wizards.com/d20.")
+            "Legal License Notes:\n\n"
+            "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and "
+            "available online at various locations. All warranties are disclaimed as set forth therein.\n\n"
+            "This product is based on the following Licensed Material: PF2 Monster Dex, © 2024, Developed by "
+            "Anastasia Altamirano.\n\n"
+            "If you use our Licensed Material in your own published works, please credit us as follows: "
+            "PF2 Monster Dex, © 2024, Developed by Anastasia Altamirano.\n\n"
+            "Reserved Material elements in this product include, but may not be limited to: "
+            "Specific characters, world lore.\n\n"
+            "The following elements are owned by the Licensor and would otherwise constitute Reserved Material and "
+            "are hereby designated as Licensed Material: General monster statblocks, game rules, and mechanics.\n"
+        )
 
         layout.addWidget(self.license_text)
         legal_tab.setLayout(layout)
