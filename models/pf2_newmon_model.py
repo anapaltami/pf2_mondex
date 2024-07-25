@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import joblib
 import numpy as np
@@ -58,7 +59,7 @@ class NewMonsterModel:
         self.model.fit(X, y)
 
         # save model
-        self.model_file.parent.mkdir(parents=True, exist_ok=True)
+        os.makedirs(os.path.dirname(self.model_file), exist_ok=True)
         joblib.dump(self.model, self.model_file)
         return True
 
@@ -80,5 +81,5 @@ class NewMonsterModel:
         return dict(zip(columns, pred_stats))
 
     def ensure_model_exists(self, level, trait=None):
-        if not self.model_file.exists():
+        if not os.path.exists(self.model_file):
             self.train(level, trait)
