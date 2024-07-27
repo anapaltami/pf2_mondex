@@ -23,7 +23,7 @@ DB_FILE = DATA_FOLDER / 'PF2_Monsters.db'
 
 UI_FOLDER = MONDEX_ROOT / 'ui'
 UI_EXEC_FILE = UI_FOLDER / 'main_window.py'
-STYLE_SHEET = UI_FOLDER / 'styles.qss'
+STYLE_SHEET = UI_FOLDER / 'styles_dark.qss'
 
 AI_FOLDER = MONDEX_ROOT / 'models'
 MODEL_FILE = AI_FOLDER / 'pf2_newmon_model.pkl'

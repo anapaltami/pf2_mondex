@@ -15,7 +15,7 @@ Dependencies:
 """
 import sqlite3
 import pandas as pd
-from config import CSV_FILE, DB_FILE, UI_EXEC_FILE
+from config import CSV_FILE, DB_FILE
 from cleaning import clean_data
 import logging
 
