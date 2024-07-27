@@ -13,8 +13,6 @@ Dependencies:
     - PyQt5
     - logging
 """
-import subprocess
-import sys
 import sqlite3
 import pandas as pd
 from config import CSV_FILE, DB_FILE, UI_EXEC_FILE

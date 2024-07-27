@@ -1,10 +1,12 @@
 import sqlite3
 import pandas as pd
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtWidgets import (
     QVBoxLayout, QLineEdit, QWidget, QPushButton, QTableWidgetItem, QTableWidget, QFormLayout, QSpinBox, QComboBox,
-    QLabel, QTabWidget, QTextEdit, QHBoxLayout, QHeaderView
+    QLabel, QTabWidget, QHBoxLayout, QHeaderView
 )
-from src.config import DB_FILE
+from src.config import DB_FILE, PAIZO_LOGO, AZORA_LOGO, STYLE_SHEET
 from models.pf2_newmon_model import NewMonsterModel
 import logging
 
@@ -17,6 +19,11 @@ class MainWindow(QWidget):
         self.model = NewMonsterModel()
         self.model.ensure_model_exists(level=0)
         self.initUI()
+        self.apply_stylesheet()
+
+    def apply_stylesheet(self):
+        with open(STYLE_SHEET, 'r') as f:
+            self.setStyleSheet(f.read())
 
     def initUI(self):
         self.layout = QVBoxLayout()
@@ -109,12 +116,33 @@ class MainWindow(QWidget):
     def legality_tab(self):
         legal_tab = QWidget()
         layout = QVBoxLayout()
+        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setSpacing(10)
+
+        paizo_pixmap = QPixmap(str(PAIZO_LOGO))
+        if paizo_pixmap.isNull():
+            logging.error("Failed to load Paizo logo")
+        else:
+            paizo_pixmap = paizo_pixmap.scaledToHeight(150, Qt.SmoothTransformation)
+        paizo_label = QLabel()
+        paizo_label.setPixmap(paizo_pixmap)
+        paizo_label.setAlignment(Qt.AlignCenter)
+
+        azora_pixmap = QPixmap(str(AZORA_LOGO))
+        if azora_pixmap.isNull():
+            logging.error("Failed to load Azora Law logo")
+        else:
+            azora_pixmap = azora_pixmap.scaledToHeight(150, Qt.SmoothTransformation)
+        azora_label = QLabel()
+        azora_label.setPixmap(azora_pixmap)
+        azora_label.setAlignment(Qt.AlignCenter)
+
+        legal_heading = QLabel("Legal License Notes:")
+        legal_heading.setAlignment(Qt.AlignCenter)
+        legal_heading.setFont(QFont('Arial', 24, QFont.Bold))
 
         # legal license notes
-        self.license_text = QTextEdit(self)
-        self.license_text.setReadOnly(True)
-        self.license_text.setText(
-            "Legal License Notes:\n\n"
+        legal_text = QLabel(
             "This product is licensed under the ORC License located at the Library of Congress at TX 9-307-067 and "
             "available online at various locations. All warranties are disclaimed as set forth therein.\n\n"
             "This product is based on the following Licensed Material: PF2 Monster Dex, © 2024, Developed by "
@@ -126,8 +154,16 @@ class MainWindow(QWidget):
             "The following elements are owned by the Licensor and would otherwise constitute Reserved Material and "
             "are hereby designated as Licensed Material: General monster statblocks, game rules, and mechanics.\n"
         )
+        legal_text.setWordWrap(True)
+        legal_text.setAlignment(Qt.AlignCenter)
 
-        layout.addWidget(self.license_text)
+        h_layout = QHBoxLayout()
+        h_layout.addWidget(paizo_label)
+        h_layout.addWidget(legal_text)
+        h_layout.addWidget(azora_label)
+
+        layout.addWidget(legal_heading)
+        layout.addLayout(h_layout)
         legal_tab.setLayout(layout)
         return legal_tab
 
