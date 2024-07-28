@@ -20,6 +20,7 @@ AZORA_LOGO = MEDIA_FOLDER / 'azoralaw_logo.png'
 
 CSV_FILE = DATA_FOLDER / 'pf2_monsters.csv'
 DB_FILE = DATA_FOLDER / 'PF2_Monsters.db'
+GENERATED_DB_FILE = DATA_FOLDER / 'generated_monsters.db'
 
 UI_FOLDER = MONDEX_ROOT / 'ui'
 UI_EXEC_FILE = UI_FOLDER / 'main_window.py'
