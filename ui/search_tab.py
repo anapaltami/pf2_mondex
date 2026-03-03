@@ -82,7 +82,7 @@ class SearchTab(QWidget):
                     df_generated = pd.read_sql_query(sql_query, conn_generated)
             finally:
                 conn_generated.close()
-        except (sqlite3.OperationalError, sqlite3.DatabaseError):
+        except Exception:
             # generated database or table might not exist yet
             df_generated = pd.DataFrame(columns=columns)
 
@@ -120,7 +120,7 @@ class SearchTab(QWidget):
                 df_generated = pd.read_sql_query(query, conn_generated, params=(selected_name,))
             finally:
                 conn_generated.close()
-        except (sqlite3.OperationalError, sqlite3.DatabaseError):
+        except Exception:
             df_generated = pd.DataFrame()
 
         df_combined = pd.concat([df_main, df_generated], ignore_index=True)
