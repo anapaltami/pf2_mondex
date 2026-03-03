@@ -19,8 +19,13 @@ from config import CSV_FILE, DB_FILE
 from cleaning import clean_data
 import logging
 from pathlib import Path
+import sys
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def database_needs_refresh(csv_path: Path, db_path: Path) -> bool:
