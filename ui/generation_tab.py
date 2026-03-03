@@ -12,7 +12,6 @@ class GenerationTab(QWidget):
         super().__init__(parent)
         self.parent = parent
         self.model = NewMonsterModel()
-        self.model.ensure_model_exists(level=0)
         self.initUI()
 
     def initUI(self):
@@ -50,11 +49,15 @@ class GenerationTab(QWidget):
         self.setLayout(layout)
 
     def get_monster_traits(self):
-        conn = sqlite3.connect(DB_FILE)
-        query = f"SELECT DISTINCT `Traits` FROM pf2_monsters"
-        df = pd.read_sql_query(query, conn)
-        conn.close()
-        all_traits = df['Traits'].str.split(',').explode().str.strip().unique()
+        try:
+            with sqlite3.connect(DB_FILE) as conn:
+                query = "SELECT DISTINCT `Traits` FROM pf2_monsters"
+                df = pd.read_sql_query(query, conn)
+        except (sqlite3.OperationalError, sqlite3.DatabaseError):
+            # if the main database is unavailable for any reason, fall back to an empty list
+            return []
+
+        all_traits = df['Traits'].str.split(',').explode().str.strip().dropna().unique()
         return sorted(all_traits.tolist())
 
     def generate_monster(self):
@@ -78,41 +81,40 @@ class GenerationTab(QWidget):
 
     def get_next_id(self):
         try:
-            conn = sqlite3.connect(DB_FILE)
-            query = f"SELECT MAX(CAST(ID AS INTEGER)) FROM pf2_monsters"
-            max_id_main = pd.read_sql_query(query, conn).iloc[0, 0]
-            conn.close()
+            with sqlite3.connect(DB_FILE) as conn_main:
+                query = "SELECT MAX(CAST(ID AS INTEGER)) FROM pf2_monsters"
+                max_id_main = pd.read_sql_query(query, conn_main).iloc[0, 0]
 
-            conn = sqlite3.connect(GENERATED_DB_FILE)
-            cursor = conn.cursor()
-            cursor.execute(
-                "CREATE TABLE IF NOT EXISTS generated_monsters ("
-                "ID INTEGER, "
-                "Name TEXT, "
-                "Level INTEGER, "
-                "Alignment TEXT, "
-                "Size TEXT, "
-                "Traits TEXT, "
-                "Perception INTEGER, "
-                "Languages TEXT, "
-                "Skills TEXT, "
-                "Str INTEGER, "
-                "Dex INTEGER, "
-                "Con INTEGER, "
-                "Int INTEGER, "
-                "Wis INTEGER, "
-                "Cha INTEGER, "
-                "AC INTEGER, "
-                "Fort INTEGER, "
-                "Ref INTEGER, "
-                "Will INTEGER, "
-                "HP INTEGER, "
-                "Resistances TEXT, "
-                "Speed TEXT, "
-                "Source TEXT)")
-            cursor.execute("SELECT MAX(CAST(ID AS INTEGER)) FROM generated_monsters")
-            max_id_generated = cursor.fetchone()[0]
-            conn.close()
+            with sqlite3.connect(GENERATED_DB_FILE) as conn_generated:
+                cursor = conn_generated.cursor()
+                cursor.execute(
+                    "CREATE TABLE IF NOT EXISTS generated_monsters ("
+                    "ID INTEGER, "
+                    "Name TEXT, "
+                    "Level INTEGER, "
+                    "Alignment TEXT, "
+                    "Size TEXT, "
+                    "Traits TEXT, "
+                    "Perception INTEGER, "
+                    "Languages TEXT, "
+                    "Skills TEXT, "
+                    "Str INTEGER, "
+                    "Dex INTEGER, "
+                    "Con INTEGER, "
+                    "Int INTEGER, "
+                    "Wis INTEGER, "
+                    "Cha INTEGER, "
+                    "AC INTEGER, "
+                    "Fort INTEGER, "
+                    "Ref INTEGER, "
+                    "Will INTEGER, "
+                    "HP INTEGER, "
+                    "Resistances TEXT, "
+                    "Speed TEXT, "
+                    "Source TEXT)"
+                )
+                cursor.execute("SELECT MAX(CAST(ID AS INTEGER)) FROM generated_monsters")
+                max_id_generated = cursor.fetchone()[0]
 
             max_id_main = int(max_id_main) if max_id_main is not None else 0
             max_id_generated = int(max_id_generated) if max_id_generated is not None else 0
@@ -161,68 +163,66 @@ class GenerationTab(QWidget):
                 'Source': 'PF2MONDEX'
             }
 
-            conn = sqlite3.connect(GENERATED_DB_FILE)
-            cursor = conn.cursor()
-            cursor.execute(
-                '''CREATE TABLE IF NOT EXISTS generated_monsters (
-                ID INTEGER,
-                Name TEXT,
-                Level INTEGER,
-                Alignment TEXT,
-                Size TEXT,
-                Traits TEXT,
-                Perception INTEGER,
-                Languages TEXT,
-                Skills TEXT,
-                Str INTEGER,
-                Dex INTEGER,
-                Con INTEGER,
-                Int INTEGER,
-                Wis INTEGER,
-                Cha INTEGER,
-                AC INTEGER,
-                Fort INTEGER,
-                Ref INTEGER,
-                Will INTEGER,
-                HP INTEGER,
-                Resistances TEXT,
-                Speed TEXT,
-                Source TEXT
-                )'''
-            )
-            cursor.execute(
-                '''INSERT INTO generated_monsters 
-                (ID, Name, Level, Alignment, Size, Traits, Perception, Languages, Skills, Str, Dex, Con, Int, Wis, Cha, 
-                AC, Fort, Ref, Will, HP, Resistances, Speed, Source)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                (
-                    monster_data['ID'],
-                    monster_data['Name'],
-                    monster_data['Level'],
-                    monster_data['Alignment'],
-                    monster_data['Size'],
-                    monster_data['Traits'],
-                    monster_data['Perception'],
-                    monster_data['Languages'],
-                    monster_data['Skills'],
-                    monster_data['Str'],
-                    monster_data['Dex'],
-                    monster_data['Con'],
-                    monster_data['Int'],
-                    monster_data['Wis'],
-                    monster_data['Cha'],
-                    monster_data['AC'],
-                    monster_data['Fort'],
-                    monster_data['Ref'],
-                    monster_data['Will'],
-                    monster_data['HP'],
-                    monster_data['Resistances'],
-                    monster_data['Speed'],
-                    monster_data['Source']
+            with sqlite3.connect(GENERATED_DB_FILE) as conn:
+                cursor = conn.cursor()
+                cursor.execute(
+                    '''CREATE TABLE IF NOT EXISTS generated_monsters (
+                    ID INTEGER,
+                    Name TEXT,
+                    Level INTEGER,
+                    Alignment TEXT,
+                    Size TEXT,
+                    Traits TEXT,
+                    Perception INTEGER,
+                    Languages TEXT,
+                    Skills TEXT,
+                    Str INTEGER,
+                    Dex INTEGER,
+                    Con INTEGER,
+                    Int INTEGER,
+                    Wis INTEGER,
+                    Cha INTEGER,
+                    AC INTEGER,
+                    Fort INTEGER,
+                    Ref INTEGER,
+                    Will INTEGER,
+                    HP INTEGER,
+                    Resistances TEXT,
+                    Speed TEXT,
+                    Source TEXT
+                    )'''
                 )
-            )
-            conn.commit()
-            conn.close()
+                cursor.execute(
+                    '''INSERT INTO generated_monsters 
+                    (ID, Name, Level, Alignment, Size, Traits, Perception, Languages, Skills, Str, Dex, Con, Int, Wis, Cha, 
+                    AC, Fort, Ref, Will, HP, Resistances, Speed, Source)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                    (
+                        monster_data['ID'],
+                        monster_data['Name'],
+                        monster_data['Level'],
+                        monster_data['Alignment'],
+                        monster_data['Size'],
+                        monster_data['Traits'],
+                        monster_data['Perception'],
+                        monster_data['Languages'],
+                        monster_data['Skills'],
+                        monster_data['Str'],
+                        monster_data['Dex'],
+                        monster_data['Con'],
+                        monster_data['Int'],
+                        monster_data['Wis'],
+                        monster_data['Cha'],
+                        monster_data['AC'],
+                        monster_data['Fort'],
+                        monster_data['Ref'],
+                        monster_data['Will'],
+                        monster_data['HP'],
+                        monster_data['Resistances'],
+                        monster_data['Speed'],
+                        monster_data['Source']
+                    )
+                )
 
             self.show_message(f"Monster '{name}' has been saved!")
         except Exception as e:

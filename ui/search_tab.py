@@ -48,25 +48,43 @@ class SearchTab(QWidget):
         self.load_data()
 
     def load_data(self, query=""):
-        # load and query PF2 monster database
-        conn = sqlite3.connect(DB_FILE)
-        if query:
-            sql_query = (f"SELECT Name, Traits FROM pf2_monsters "
-                         f"WHERE Name LIKE '%{query}%' OR Traits LIKE '%{query}%'")
-        else:
-            sql_query = f"SELECT Name, Level, Traits FROM pf2_monsters"
-        df_main = pd.read_sql_query(sql_query, conn)
-        conn.close()
+        columns = ['Name', 'Level', 'Traits']
 
-        # load and query user generated monster database
-        conn = sqlite3.connect(GENERATED_DB_FILE)
-        if query:
-            sql_query = (f"SELECT Name, Traits FROM generated_monsters "
-                         f"WHERE Name LIKE '%{query}%' OR Traits LIKE '%{query}%'")
-        else:
-            sql_query = f"SELECT Name, Level, Traits FROM generated_monsters"
-        df_generated = pd.read_sql_query(sql_query, conn)
-        conn.close()
+        # load and query PF2 monster database
+        conn_main = sqlite3.connect(DB_FILE)
+        try:
+            if query:
+                like = f"%{query}%"
+                sql_query = (
+                    "SELECT Name, Level, Traits FROM pf2_monsters "
+                    "WHERE Name LIKE ? OR Traits LIKE ?"
+                )
+                df_main = pd.read_sql_query(sql_query, conn_main, params=(like, like))
+            else:
+                sql_query = "SELECT Name, Level, Traits FROM pf2_monsters"
+                df_main = pd.read_sql_query(sql_query, conn_main)
+        finally:
+            conn_main.close()
+
+        # load and query user generated monster database (if it exists)
+        try:
+            conn_generated = sqlite3.connect(GENERATED_DB_FILE)
+            try:
+                if query:
+                    like = f"%{query}%"
+                    sql_query = (
+                        "SELECT Name, Level, Traits FROM generated_monsters "
+                        "WHERE Name LIKE ? OR Traits LIKE ?"
+                    )
+                    df_generated = pd.read_sql_query(sql_query, conn_generated, params=(like, like))
+                else:
+                    sql_query = "SELECT Name, Level, Traits FROM generated_monsters"
+                    df_generated = pd.read_sql_query(sql_query, conn_generated)
+            finally:
+                conn_generated.close()
+        except (sqlite3.OperationalError, sqlite3.DatabaseError):
+            # generated database or table might not exist yet
+            df_generated = pd.DataFrame(columns=columns)
 
         df_combined = pd.concat([df_main, df_generated], ignore_index=True)
 
@@ -88,15 +106,22 @@ class SearchTab(QWidget):
             return
 
         selected_name = selected_items[0].text()
-        conn = sqlite3.connect(DB_FILE)
-        query = f"SELECT * FROM pf2_monsters WHERE Name = ?"
-        df_main = pd.read_sql_query(query, conn, params=(selected_name,))
-        conn.close()
+        conn_main = sqlite3.connect(DB_FILE)
+        try:
+            query = "SELECT * FROM pf2_monsters WHERE Name = ?"
+            df_main = pd.read_sql_query(query, conn_main, params=(selected_name,))
+        finally:
+            conn_main.close()
 
-        conn = sqlite3.connect(GENERATED_DB_FILE)
-        query = f"SELECT * FROM generated_monsters WHERE Name = ?"
-        df_generated = pd.read_sql_query(query, conn, params=(selected_name,))
-        conn.close()
+        try:
+            conn_generated = sqlite3.connect(GENERATED_DB_FILE)
+            try:
+                query = "SELECT * FROM generated_monsters WHERE Name = ?"
+                df_generated = pd.read_sql_query(query, conn_generated, params=(selected_name,))
+            finally:
+                conn_generated.close()
+        except (sqlite3.OperationalError, sqlite3.DatabaseError):
+            df_generated = pd.DataFrame()
 
         df_combined = pd.concat([df_main, df_generated], ignore_index=True)
 
